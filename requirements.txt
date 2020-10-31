@@ -1,0 +1,19 @@
+# Abount Django project
+requests>=2.22.0
+django==3.1
+lxml==4.5.2
+
+# About PostgreSQL
+psycopg2==2.8.5
+
+# About Heroku
+gunicorn>=20.0.4
+whitenoise>=5.1.0
+django_heroku
+
+# About analisys data
+pandas>=0.25.3
+numpy
+matplotlib
+python-dotenv>=0.14.0  # Manage enviroment vars
+folium
