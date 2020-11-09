@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     # My Apps
-    'app_home',
     'app_covid19data',
 ]
 

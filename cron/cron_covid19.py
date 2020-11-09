@@ -284,8 +284,8 @@ def generate_heat_map(_list_data):
         heat_map = folium.Map(location=[43, 0],
                               zoom_start='3',
                               tiles='Stamen Toner',
-                              width='100%',
-                              height='100%')
+                              width='99%',
+                              height='99%')
         location = []
 
         for c in range(0, len(_list_data)):
