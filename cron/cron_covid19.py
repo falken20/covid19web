@@ -51,6 +51,28 @@ load_dotenv(find_dotenv())
 logging.basicConfig(level=os.getenv('LOG_LEVEL', 'ERROR'))
 
 
+def delete_data(_year_from, _month_from, _day_from=1):
+    """
+    Delete all the data in the DB from the params year and month
+    :param _day_from: Day from to delete
+    :param _year_from: Year from to delete
+    :param _month_from: Month from to delete
+    """
+    try:
+        logging.info(f'Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
+        date_from = date(int(_year_from), int(_month_from), int(_day_from))
+        DataCovid19Item.objects.filter(date__gt=date_from).delete()
+
+    except Exception as err:
+        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
+                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
+                      f'Type Error: {type(err).__name__} \n'
+                      f'Arguments:\n {err.args}')
+        raise
+    else:
+        logging.info(f'Successfully delete rows in the DB')
+
+
 def save_data(df):
     """ Method to save data of dataframe in DB """
     try:
@@ -85,7 +107,33 @@ def save_data(df):
                       f'Arguments:\n {err.args}')
         raise
     else:
-        logging.debug(f'{os.getenv("ID_LOG")} Successfully saved the df block')
+        logging.debug(f'Successfully saved the df block')
+
+
+def create_list_urls_day(_current_year, _current_month, _current_day):
+    """
+    Load the url of the current day
+    :return: List with the one url
+    """
+
+    logging.info(f'Loading a list with the CSV file name for a day')
+
+    _list_urls = []
+    try:
+
+        logging.info(f'Current date: {_current_year}/{_current_month}/{_current_day}')
+
+        _list_urls.append(
+            str(URL_CSV_FILES + f'/{str(_current_month).zfill(2)}-{str(_current_day).zfill(2)}-{_current_year}.csv'))
+
+        return _list_urls
+
+    except Exception as err:
+        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
+                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
+                      f'Type Error: {type(err).__name__} \n'
+                      f'Arguments:\n {err.args}')
+        raise
 
 
 def create_list_urls(_year_to_process=2020, _month_from=3):
@@ -93,14 +141,14 @@ def create_list_urls(_year_to_process=2020, _month_from=3):
     Load all the urls of daily data of a specific year and from a specific month
     :param _year_to_process: Year to load
     :param _month_from: From this month start to load data
-    :return:
+    :return: List of urls
     """
 
     if _year_to_process is None or _year_to_process == '':
         _year_to_process = 2020
     if _month_from is None or _month_from == '':
         _month_from = 3
-    logging.info(f'Load a list with the CSV file names, one per every day from {_year_to_process}/{_month_from}')
+    logging.info(f'Reloading a list with the CSV file names, one per every day from {_year_to_process}/{_month_from}')
 
     _list_urls = []
     try:
@@ -114,7 +162,7 @@ def create_list_urls(_year_to_process=2020, _month_from=3):
             logging.error(f'The chosen month is later the current month')
             return _list_urls
 
-        # Load links for every day in all the months of the year least the current month
+        # Load links for every day in all the months of the year except the current month
         for month in range(int(_month_from), current_month):
             for day in range(1, 32):
                 _list_urls.append(
@@ -137,7 +185,7 @@ def create_list_urls(_year_to_process=2020, _month_from=3):
         raise
 
 
-def rename_columns_list(_list_data):
+def check_list(_list_data):
     """ Unify the column name in a list for some columns because at the beginning the name was different """
     logging.debug('Rename some column name in dataframe')
     try:
@@ -190,7 +238,7 @@ def load_data_urls(_list_urls):
     :param _list_urls: List where every element is a url to a CSV file data source
     """
 
-    logging.info(f'Start to get the data from urls')
+    logging.info(f'Start to get the data from urls and saving in DB')
 
     _list_data = []
     urls_count = 0
@@ -223,6 +271,7 @@ def load_data_urls(_list_urls):
                       f'Type Error: {type(err).__name__} \n'
                       f'Arguments:\n {err.args}')
     finally:
+        print(f'Total saved rows in DB: {lines_count_df}')
         return _list_data
 
 
@@ -314,23 +363,34 @@ def cron_covid19():
     the data to save in DB
     """
     try:
-        year_to_process = 2020
-        month_from = 11
-        graphs = False
+        # Verify if we have to reloading data of several dates or loading only one day
+        reload = True if os.getenv('RELOAD', 'N').upper() == 'Y' else False
 
-        # Create a list with the urls to a every data day
-        list_urls = create_list_urls(year_to_process, month_from)
+        year = os.getenv('YEAR_FROM', 2020) if reload else date.today().year
+        month = os.getenv('MONTH_FROM', 3) if reload else date.today().month
+        day = 1 if reload else date.today().day - 1
 
-        # Transform the urls in a dataframe and after that in a list and filtering by Spain or Global
+        list_urls = []
+        # If environment var RELOAD is True load all the data from YEAR_FROM and MONTH_FROM
+        if reload:
+            list_urls = create_list_urls(year, month)
+        else:
+            list_urls = create_list_urls_day(year, month, day)
+
+        # Deleting old data before loading
+        delete_data(year, month, day)
+
+        # Transform the urls in a dataframe and after that in a list
         list_data = load_data_urls(list_urls)
 
         # Rename some columns names
-        list_data = rename_columns_list(list_data)
+        list_data = check_list(list_data)
 
         # Get different lists for every kind of data, dead, confirmed cases and recovered cases
         dead_cases, confirmed_cases, recovered_cases = generate_data_lists(list_data)
 
         # Create the graphs
+        graphs = False
         if graphs:
             generate_graph(dead_cases, 'Dead cases', 'red')
             generate_graph(confirmed_cases, 'Confirmed cases', 'black')
