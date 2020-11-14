@@ -5,6 +5,6 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.map_view, name='Heat map'),
+    # path('resume/', views.resume_view, name='Resume data'),
     path('heatmap/', views.heatmap_view, name='Heat Map'),
 ]

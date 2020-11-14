@@ -16,13 +16,17 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from app_covid19data.views import map_view
+from app_covid19data.views import resume_view
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
     # Home page
-    path('', map_view, name='Heat map'),
+    path('', resume_view, name='Data resume'),
+
+    # About page
+    path('about/', views.about_view, name='About page'),
 
     # app_covid19data views
     path('data/', include('app_covid19data.urls')),

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+<div class="container" style="margin-top:20px;">
+
+  <div class="card mb-3" style="max-width: 540px;margin: 0  auto">
+
+    <div class="row no-gutters">
+      <div class="col-md-4" style="max-height:150px; max-width:150px; margin:auto auto">
+        <img src="{% static 'covid19web/img/falken_logo.png' %}" class="card-img" alt="falken20">
+      </div>
+
+      <div class="col-md-8">
+        <div class="card-body">
+
+          <h1 class="card-title"> {{ about_data.title }}</h1>
+          <h6 class="card-text"> {{ about_data.author }} - Version {{ about_data.version }} / {{ about_data.license }}</h6>
+          <p class="card-text"><small class="text-muted">{{ about_data.copyrigth }} </small></p>
+          <a href="{{ about_data.url_github }}" target="_blank">
+            <img src="{% static 'covid19web/img/github.png' %}" class="card-img" alt="falken20"
+                 style="max-height:25px; width: auto; margin:0 auto;">
+          </a>
+          <a href="{{ about_data.url_linkedin }}" target="_blank">
+            <img src="{% static 'covid19web/img/linkedin.png' %}" class="card-img" alt="falken20"
+                 style="max-height:25px; width: auto; margin:0 auto;">
+          </a>
+          <a href="{{ about_data.url_twitter }}" target="_blank">
+            <img src="{% static 'covid19web/img/twitter.png' %}" class="card-img" alt="falken20"
+                 style="max-height:25px; width: auto; margin:0 auto;">
+          </a>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="col-md-12">
+        <p>
+          <button class="btn btn-info btn-sm" type="button" data-toggle="collapse"
+                  data-target="#collapseFeatures" aria-expanded="false" aria-controls="collapseExample">
+            New features in {{ about_data.version }} version</button>
+        </p>
+        <div class="collapse" id="collapseFeatures">
+          <div>
+            <ul>
+              {% for element in about_data.features %}
+              <li><small class="text-muted">{{ element }}</small></li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% endblock content %}

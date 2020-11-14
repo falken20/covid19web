@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+<div class="container">
+
+    <div class="form-group col-md-4">
+        <select id="country" name="country" class="form-control" required>
+            {% for element in countries %}
+                {% if element.country == "Spain" %}
+                    <option value={{ element.country }} selected>{{ element.country }}</option>
+                {% else %}
+                    <option value={{ element.country }}>{{ element.country }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="form-group col-md-8">
+        <table class="table table-striped table-center">
+            <thead>
+                <tr>
+                    <th>Dead cases</th>
+                    <th>Confirmed cases</th>
+                    <th>Recovered cases</th>
+                    <th>Active cases</th>
+                    <th>Mortality tax</th>
+                    <th>Recovered tax</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr style="font-size:smaller;">
+                    <td> {{ resume_data.dead_cases }} </td>
+                    <td> {{ resume_data.confirmed_cases }} </td>
+                    <td> {{ resume_data.recovered_cases }} </td>
+                    <td> {{ resume_data.active_cases }} </td>
+                    <td> {{ resume_data.mortality_tax }} % </td>
+                    <td> {{ resume_data.recovered_tax }} % </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <small>Last update {{resume_data.date.date}}</small>
+    </div>
+
+</div>
+
+{% endblock content %}
