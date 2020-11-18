@@ -20,13 +20,14 @@ def resume_view(request):
     # Get the countries names for the combo to shoose country
     countries = DataCovid19Item.objects.values('country').order_by('country').distinct()
 
-    # Get the last record in DB from country_name, the view shows data from Spain by default
+    # Get the last record in DB grouping by country_name and date, the view shows data from Spain by default
+    # This is because the amount of the vars is accumulated every day
     queryset = DataCovid19Item.objects.values('country',
-                                              'date',
-                                              'dead_cases',
-                                              'confirmed_cases',
-                                              'recovered_cases',
-                                              'active_cases').filter(country=country_name).order_by('-date')[0]
+                                              'date').annotate(dead_cases=Sum('dead_cases'),
+                                                               confirmed_cases=Sum('confirmed_cases'),
+                                                               recovered_cases=Sum('recovered_cases'),
+                                                               active_cases=Sum('active_cases'),
+                                                               ).filter(country=country_name).order_by('-date')[0]
 
     # Calculate mortality and recovered tax
     queryset['mortality_tax'] = round(queryset['dead_cases'] / queryset['confirmed_cases'] * 100, 2)
@@ -53,4 +54,19 @@ def heatmap_view(request):
     """ For showing heat map."""
 
     logging.info(f'{os.getenv("ID_LOG", "")} Showing the heat map')
-    return render(request, 'map/heatMap.html')
+    template_name = 'covid19data/heat_map.html'
+
+    return render(request, template_name)
+
+
+def graph_view(request, graph_type='confirmed'):
+    """
+    Showing graphs about data
+    :param request: Request
+    :param graph_type: What type of graph to show: confirmed, recovered o deaths
+    """
+    logging.info(f'{os.getenv("ID_LOG", "")} Showing graph for {graph_type} cases')
+
+    template_name = 'covid19data/graph.html'
+
+    return render(request, template_name, {'graph_type': graph_type})

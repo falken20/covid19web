@@ -22,12 +22,9 @@ from . import views
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Home page
-    path('', resume_view, name='Data resume'),
-
     # About page
     path('about/', views.about_view, name='About page'),
 
     # app_covid19data views
-    path('data/', include('app_covid19data.urls')),
+    path('', include('app_covid19data.urls')),
 ]

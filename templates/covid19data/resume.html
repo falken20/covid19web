@@ -7,7 +7,7 @@
 <div class="container">
 
     <div class="col-md-4">
-        <form action="/data/" method="POST" class="form-inline"> {% csrf_token %}
+        <form action="/" method="POST" class="form-inline"> {% csrf_token %}
             <select id="country_name" name="country_name" class="custom-select my-1" required">
                 {% for element in countries %}
                     {% if element.country == resume_data.country %}

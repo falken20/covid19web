@@ -42,7 +42,8 @@ COL_ACTIVE_CASES = 'Active'
 COL_INCIDENCE_RATE = 'Incidence_Rate'
 COL_CASE_FATALITY_RATIO = 'Case-Facility_Ratio'
 
-PATH_MAP = '../templates/map/'
+PATH_MAP = '../templates/covid19data/'
+PATH_GRAPH = '../static/covid19web/img/'
 
 # Load env file
 load_dotenv(find_dotenv())
@@ -53,7 +54,7 @@ logging.basicConfig(level=os.getenv('LOG_LEVEL', 'ERROR'))
 
 def delete_data(_year_from, _month_from, _day_from=1):
     """
-    Delete all the data in the DB from the params year and month
+    Delete all the data in the DB from date indicate in the params year, month and day
     :param _day_from: Day from to delete
     :param _year_from: Year from to delete
     :param _month_from: Month from to delete
@@ -298,7 +299,7 @@ def generate_data_lists(_list_data):
     return _list_dead_cases, _list_confirmed_cases, _list_recovered_cases
 
 
-def generate_graph(_list_data, _label, _color):
+def generate_graph(_list_data, _label='Graph', _color='Pink'):
     """
     Method for generate the graph with the data
     :param _color: Color for the line in the graph
@@ -317,8 +318,8 @@ def generate_graph(_list_data, _label, _color):
     plt.title(f'COVID-19 Evolution')
     plt.grid(True)
     plt.legend(loc='upper left')
-    # plt.savefig('falken_graph.png')
-    plt.show()
+    plt.savefig(f'{PATH_GRAPH}graph_{_color}.png')
+    # plt.show()
 
 
 def generate_heat_map(_list_data):
@@ -377,7 +378,7 @@ def cron_covid19():
         else:
             list_urls = create_list_urls_day(year, month, day)
 
-        # Deleting old data before loading
+        # Deleting old data from the date before loading
         delete_data(year, month, day)
 
         # Transform the urls in a dataframe and after that in a list
@@ -390,7 +391,7 @@ def cron_covid19():
         dead_cases, confirmed_cases, recovered_cases = generate_data_lists(list_data)
 
         # Create the graphs
-        graphs = False
+        graphs = True
         if graphs:
             generate_graph(dead_cases, 'Dead cases', 'red')
             generate_graph(confirmed_cases, 'Confirmed cases', 'black')
