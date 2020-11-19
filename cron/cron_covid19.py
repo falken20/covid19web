@@ -58,7 +58,9 @@ def delete_data(_year_from, _month_from, _day_from=1):
     try:
         logging.info(f'Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
         date_from = date(int(_year_from), int(_month_from), int(_day_from))
-        DataCovid19Item.objects.filter(date__gt=date_from).delete()
+
+        # Delete return the number of rows deleted and by object type
+        number_delete = DataCovid19Item.objects.filter(date__gt=date_from).delete()
 
     except Exception as err:
         logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
@@ -67,7 +69,7 @@ def delete_data(_year_from, _month_from, _day_from=1):
                       f'Arguments:\n {err.args}')
         raise
     else:
-        logging.info(f'Successfully delete rows in the DB')
+        logging.info(f'Successfully delete {number_delete[0]} rows in the DB')
 
 
 def save_data(df):
@@ -107,43 +109,20 @@ def save_data(df):
         logging.debug(f'Successfully saved the df block')
 
 
-def create_list_urls_day(_current_year, _current_month, _current_day):
-    """
-    Load the url of the current day
-    :return: List with the one url
-    """
-
-    logging.info(f'Loading a list with the CSV file name for the day '
-                 f'{_current_year}/{_current_month}/{_current_day}')
-
-    _list_urls = []
-    try:
-        _list_urls.append(
-            str(URL_CSV_FILES + f'/{str(_current_month).zfill(2)}-{str(_current_day).zfill(2)}-{_current_year}.csv'))
-
-        return _list_urls
-
-    except Exception as err:
-        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
-                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
-                      f'Type Error: {type(err).__name__} \n'
-                      f'Arguments:\n {err.args}')
-        raise
-
-
-def create_list_urls(_year_to_process=2020, _month_from=3):
+def create_list_urls(_year_from=2020, _month_from=3, _day_from=1):
     """
     Load all the urls of daily data of a specific year and from a specific month
-    :param _year_to_process: Year to load
+    :param _year_from: Year to load
     :param _month_from: From this month start to load data
+    :param _day_from: From this day start to load data
     :return: List of urls
     """
 
-    if _year_to_process is None or _year_to_process == '':
+    if _year_from is None or _year_from == '':
         _year_to_process = 2020
     if _month_from is None or _month_from == '':
         _month_from = 3
-    logging.info(f'Reloading a list with the CSV file names, one per every day from {_year_to_process}/{_month_from}')
+    logging.info(f'Getting list with the CSV file names, one every day from {_year_from}/{_month_from}/{_day_from}')
 
     _list_urls = []
     try:
@@ -151,26 +130,33 @@ def create_list_urls(_year_to_process=2020, _month_from=3):
         # day = int(str(date.today())[-2:])
         current_day = date.today().day
         current_month = date.today().month
-        logging.info(f'Current month and day: {current_month} / {current_day}')
+        logging.info(f'Current day: {current_month}/{current_day}')
 
         if int(_month_from) > int(current_month):
-            logging.error(f'The chosen month is later the current month')
-            return _list_urls
+            logging.error(f'The chosen month is greater the current month')
+        elif int(_month_from) == int(current_month):
+            if int(_day_from) > int(current_day):
+                logging.error(f'The chosen day is greater the current day')
 
-        # Load links for every day in all the months of the year except the current month
-        for month in range(int(_month_from), current_month):
-            for day in range(1, 32):
-                _list_urls.append(
-                    str(URL_CSV_FILES + f'/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_to_process}.csv'))
-
-        # Add links for every day in the current month
-        for day in range(1, current_day):
-            _list_urls.append(
-                str(URL_CSV_FILES + f'/{str(current_month).zfill(2)}-{str(day).zfill(2)}-{_year_to_process}.csv'))
+        if int(_month_from) == int(current_month):
+            for day in range(int(_day_from), current_day):
+                _list_urls.append(f'{URL_CSV_FILES}/{str(_month_from).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+        else:
+            for month in range(int(_month_from), current_month + 1):
+                if int(month) == int(_month_from):
+                    # Load the data from the first month from the day specified
+                    for day in range(int(_day_from), 32):
+                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+                elif int(month) == int(current_month):
+                    # Add links for every day in the current month
+                    for day in range(1, current_day):
+                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+                else:
+                    # Load links for every day in all the months of the year except the current month and _from_month
+                    for day in range(1, 32):
+                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
 
         logging.info(f'Number of urls of data files: {len(_list_urls)}')
-
-        return _list_urls
 
     except Exception as err:
         logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
@@ -178,6 +164,9 @@ def create_list_urls(_year_to_process=2020, _month_from=3):
                       f'Type Error: {type(err).__name__} \n'
                       f'Arguments:\n {err.args}')
         raise
+
+    finally:
+        return _list_urls
 
 
 def check_list(_list_data):
@@ -255,8 +244,7 @@ def load_data_urls(_list_urls):
 
             lines_count_df += len(df_data)
             urls_count += 1
-            if urls_count % 10 == 0:
-                print(f'Processing URLs: {urls_count}/{len(_list_urls)}'
+            print(f'Processing URLs: {urls_count}/{len(_list_urls)}'
                       f', Total saved rows in DB: {lines_count_df}')
 
     except Exception as err:
@@ -266,7 +254,6 @@ def load_data_urls(_list_urls):
                       f'Type Error: {type(err).__name__} \n'
                       f'Arguments:\n {err.args}')
     finally:
-        print(f'Total saved rows in DB: {lines_count_df}')
         return _list_data
 
 
@@ -304,14 +291,9 @@ def cron_covid19():
 
         year = os.getenv('YEAR_FROM', 2020) if reload else date.today().year
         month = os.getenv('MONTH_FROM', 3) if reload else date.today().month
-        day = 1 if reload else date.today().day - 1
+        day = os.getenv('DAY_FROM', 2020) if reload else date.today().day - 1
 
-        list_urls = []
-        # If environment var RELOAD is True load all the data from YEAR_FROM and MONTH_FROM
-        if reload:
-            list_urls = create_list_urls(year, month)
-        else:
-            list_urls = create_list_urls_day(year, month, day)
+        list_urls = create_list_urls(year, month, day)
 
         # Deleting old data from the date before loading
         delete_data(year, month, day)
@@ -337,7 +319,8 @@ def cron_covid19():
              }
 
         resume_data = pd.DataFrame(data=resume_data, index=[0])
-        logging.info(f'Summary table: \n {resume_data}')
+
+        print(f'Summary table: \n {resume_data}')
 
     except Exception as err:
         logging.error(f'\nError at line: {err.__traceback__.tb_lineno} \n'

@@ -106,7 +106,7 @@ def cron_covid19():
 
         year = os.getenv('YEAR_FROM', 2020) if reload else date.today().year
         month = os.getenv('MONTH_FROM', 3) if reload else date.today().month
-        day = 1 if reload else date.today().day - 1
+        day = os.getenv('DAY_FROM', 2020) if reload else date.today().day - 1
 
         list_urls = []
         # If environment var RELOAD is True load all the data from YEAR_FROM and MONTH_FROM
