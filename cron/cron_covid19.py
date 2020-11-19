@@ -9,14 +9,10 @@ from urllib.error import HTTPError
 from apscheduler.schedulers.blocking import BlockingScheduler
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 from dotenv import load_dotenv, find_dotenv
 from datetime import date
 from dateutil.parser import parse
-# Heat map
-import folium
-import math
-from folium.plugins import HeatMap
+
 
 # If you’re using components of Django “standalone” – for example, writing a Python script which
 # loads some Django components
@@ -90,7 +86,7 @@ def save_data(df):
                                    recovered_cases=row[COL_RECOVERED_CASES],
                                    )
             # Parser the date
-            item.date = parse(row[COL_LAST_UPDATE])
+            item.date = parse(row[COL_LAST_UPDATE]).date()
 
             # Some columns not always exists in the files
             item.active_cases = row[COL_ACTIVE_CASES] if 'Active' in name_cols else 0
@@ -117,13 +113,11 @@ def create_list_urls_day(_current_year, _current_month, _current_day):
     :return: List with the one url
     """
 
-    logging.info(f'Loading a list with the CSV file name for a day')
+    logging.info(f'Loading a list with the CSV file name for the day '
+                 f'{_current_year}/{_current_month}/{_current_day}')
 
     _list_urls = []
     try:
-
-        logging.info(f'Current date: {_current_year}/{_current_month}/{_current_day}')
-
         _list_urls.append(
             str(URL_CSV_FILES + f'/{str(_current_month).zfill(2)}-{str(_current_day).zfill(2)}-{_current_year}.csv'))
 
@@ -299,65 +293,6 @@ def generate_data_lists(_list_data):
     return _list_dead_cases, _list_confirmed_cases, _list_recovered_cases
 
 
-def generate_graph(_list_data, _label='Graph', _color='Pink'):
-    """
-    Method for generate the graph with the data
-    :param _color: Color for the line in the graph
-    :param _label: Label to show in the plot
-    :param _list_data: List of data to show
-    """
-
-    logging.info(f'Start to generate the graph of {_label}')
-
-    # Generate the graph
-    x = [i for i in range(0, len(_list_data))]
-    plt.style.use('seaborn-talk')
-    plt.plot(x, _list_data, color=_color, label=_label, linewidth=1.0)
-    plt.xlabel('Days')
-    plt.ylabel('People number')
-    plt.title(f'COVID-19 Evolution')
-    plt.grid(True)
-    plt.legend(loc='upper left')
-    plt.savefig(f'{PATH_GRAPH}graph_{_color}.png')
-    # plt.show()
-
-
-def generate_heat_map(_list_data):
-    """
-    Method to generate a heat map with all the values
-    :param _list_data: List of values for every day
-    """
-
-    logging.info('Start to generate the heat map')
-
-    try:
-        heat_map = folium.Map(location=[43, 0],
-                              zoom_start='3',
-                              tiles='Stamen Toner',
-                              width='99%',
-                              height='99%')
-        location = []
-
-        for c in range(0, len(_list_data)):
-            for lat, lon in zip(_list_data[c]['Latitude'], _list_data[c]['Longitude']):
-                if math.isnan(lat) or math.isnan(lon):
-                    pass
-                else:
-                    location.append([lat, lon])
-
-        HeatMap(location, radius=16).add_to(heat_map)
-        heat_map.save(f'{PATH_MAP}heatMap.html')
-
-        logging.info('Heat map successfully generated in html')
-
-    except Exception as err:
-        logging.error(f'\n_list_data: {_list_data[c]}'
-                      f'Line: {err.__traceback__.tb_lineno} \n'
-                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
-                      f'Type Error: {type(err).__name__} \n'
-                      f'Arguments:\n {err.args}')
-
-
 def cron_covid19():
     """
     Method in which start the process and call the rest of the methods for calculating and get
@@ -390,13 +325,6 @@ def cron_covid19():
         # Get different lists for every kind of data, dead, confirmed cases and recovered cases
         dead_cases, confirmed_cases, recovered_cases = generate_data_lists(list_data)
 
-        # Create the graphs
-        graphs = True
-        if graphs:
-            generate_graph(dead_cases, 'Dead cases', 'red')
-            generate_graph(confirmed_cases, 'Confirmed cases', 'black')
-            generate_graph(recovered_cases, 'Recovered cases', 'blue')
-
         # Generate summary table
         resume_data = \
             {'Dead cases': dead_cases[len(dead_cases) - 1],
@@ -410,9 +338,6 @@ def cron_covid19():
 
         resume_data = pd.DataFrame(data=resume_data, index=[0])
         logging.info(f'Summary table: \n {resume_data}')
-
-        # Generate heat map
-        generate_heat_map(list_data)
 
     except Exception as err:
         logging.error(f'\nError at line: {err.__traceback__.tb_lineno} \n'

@@ -9,7 +9,7 @@ class DataCovid19Item(models.Model):
     # About localization
     country = models.TextField(max_length=100)
     state = models.TextField(max_length=100, null=True)
-    date = models.DateTimeField(null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     # About data incomes
