@@ -349,7 +349,7 @@ cron_covid19 = BlockingScheduler()
 @cron_covid19.scheduled_job('interval', hours=24, start_date='2020-11-21 05:00:00')
 # @cron_covid19.scheduled_job('interval', seconds=20)
 def timed_job():
-    """ Method to schedule the cron """
+    # Method to schedule the cron 
     print(f'********* START CRON COVID19 {SETUP_DATA["title"]} *********')
     cron_covid19()
     print(f'********* END CRON COVID19 {SETUP_DATA["title"]} *********')
