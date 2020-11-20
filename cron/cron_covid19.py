@@ -337,6 +337,10 @@ def cron_covid19():
                       f'Arguments:\n {err.args}')
 
 
+if __name__ == '__main__':
+    cron_covid19()
+
+"""
 # Create the cron object
 cron_covid19 = BlockingScheduler()
 
@@ -352,3 +356,4 @@ def timed_job():
 
 
 cron_covid19.start()
+"""
