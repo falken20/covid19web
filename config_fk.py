@@ -9,6 +9,9 @@ __url_linkedin__ = 'https://www.linkedin.com/in/richionline/'
 __license__ = 'MIT License'
 __copyright__ = '© 2020 by Richi Rod AKA @richionline / falken20'
 __features__ = [
+    'Data by country',
+    'Several graphs',
+    'Heat map',
 ]
 
 

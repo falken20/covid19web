@@ -1,5 +1,7 @@
 """
 Cron to process data for COVID19 around the world and save in DB
+Every file for a day has the data with date day + 1. Except in the files for March and April.
+For example, the file .../csse_covid_19_daily_reports/11-18-2020.csv brings data with date 2020/11/19
 """
 
 import logging
@@ -13,12 +15,12 @@ from dotenv import load_dotenv, find_dotenv
 from datetime import date
 from dateutil.parser import parse
 
-
 # If you’re using components of Django “standalone” – for example, writing a Python script which
 # loads some Django components
 # https://docs.djangoproject.com/en/3.1/topics/settings/#custom-default-settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'covid19web.settings')
 import django
+
 django.setup()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -56,7 +58,7 @@ def delete_data(_year_from, _month_from, _day_from=1):
     :param _month_from: Month from to delete
     """
     try:
-        logging.info(f'Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
+        print(f'Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
         date_from = date(int(_year_from), int(_month_from), int(_day_from))
 
         # Delete return the number of rows deleted and by object type
@@ -69,7 +71,7 @@ def delete_data(_year_from, _month_from, _day_from=1):
                       f'Arguments:\n {err.args}')
         raise
     else:
-        logging.info(f'Successfully delete {number_delete[0]} rows in the DB')
+        print(f'Successfully delete {number_delete[0]} rows in the DB')
 
 
 def save_data(df):
@@ -118,6 +120,16 @@ def create_list_urls(_year_from=2020, _month_from=3, _day_from=1):
     :return: List of urls
     """
 
+    def load_days(_from, _to, _month):
+        """
+        Add urls to _list_urls getting one per day from _from to _to in a specific month
+        :param _month: Month
+        :param _from: Day from
+        :param _to: Day to
+        """
+        for _day in range(int(_from), int(_to)):
+            _list_urls.append(f'{URL_CSV_FILES}/{str(_month).zfill(2)}-{str(_day).zfill(2)}-{_year_from}.csv')
+
     if _year_from is None or _year_from == '':
         _year_to_process = 2020
     if _month_from is None or _month_from == '':
@@ -139,24 +151,20 @@ def create_list_urls(_year_from=2020, _month_from=3, _day_from=1):
                 logging.error(f'The chosen day is greater the current day')
 
         if int(_month_from) == int(current_month):
-            for day in range(int(_day_from), current_day):
-                _list_urls.append(f'{URL_CSV_FILES}/{str(_month_from).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+            load_days(_day_from, current_day, _month_from)
         else:
             for month in range(int(_month_from), current_month + 1):
                 if int(month) == int(_month_from):
                     # Load the data from the first month from the day specified
-                    for day in range(int(_day_from), 32):
-                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+                    load_days(_day_from, 32, month)
                 elif int(month) == int(current_month):
                     # Add links for every day in the current month
-                    for day in range(1, current_day):
-                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+                    load_days(1, current_day, month)
                 else:
                     # Load links for every day in all the months of the year except the current month and _from_month
-                    for day in range(1, 32):
-                        _list_urls.append(f'{URL_CSV_FILES}/{str(month).zfill(2)}-{str(day).zfill(2)}-{_year_from}.csv')
+                    load_days(1, 32, month)
 
-        logging.info(f'Number of urls of data files: {len(_list_urls)}')
+        print(f'Number of urls of data files: {len(_list_urls)}')
 
     except Exception as err:
         logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
@@ -245,7 +253,7 @@ def load_data_urls(_list_urls):
             lines_count_df += len(df_data)
             urls_count += 1
             print(f'Processing URLs: {urls_count}/{len(_list_urls)}'
-                      f', Total saved rows in DB: {lines_count_df}')
+                  f', Total rows saved in DB: {lines_count_df}')
 
     except Exception as err:
         logging.error(f'\nVars: url={url} \n'
@@ -329,22 +337,18 @@ def cron_covid19():
                       f'Arguments:\n {err.args}')
 
 
-if __name__ == '__main__':
-    cron_covid19()
-
-"""
 # Create the cron object
 cron_covid19 = BlockingScheduler()
 
 
 # Set up the cron as 'interval' and executing every 8 hours
-# @cron_covid19.scheduled_job('interval', hours=24, start_date='2020-11-01 23:45:00')
-@cron_covid19.scheduled_job('interval', seconds=20)
+@cron_covid19.scheduled_job('interval', hours=24, start_date='2020-11-21 05:00:00')
+# @cron_covid19.scheduled_job('interval', seconds=20)
 def timed_job():
-    print(f'********* START CRON {SETUP_DATA["title"]} *********')
+    """ Method to schedule the cron """
+    print(f'********* START CRON COVID19 {SETUP_DATA["title"]} *********')
     cron_covid19()
-    print.info(f'********* END CRON {SETUP_DATA["title"]} *********')
+    print(f'********* END CRON COVID19 {SETUP_DATA["title"]} *********')
 
 
 cron_covid19.start()
-"""

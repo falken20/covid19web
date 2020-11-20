@@ -20,6 +20,8 @@ from folium.plugins import HeatMap
 # https://docs.djangoproject.com/en/3.1/topics/settings/#custom-default-settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'covid19web.settings')
 import django
+from django.db.models import Sum
+
 django.setup()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -57,12 +59,15 @@ def generate_graph(_list_data, _label='Graph', _color='Pink'):
     plt.legend(loc='upper left')
     plt.savefig(f'{PATH_GRAPH}graph_{_color}.png')
     # plt.show()
+    plt.close()
+
+    print(f'Graph of {_label} generates successfully')
 
 
-def generate_heat_map(_list_data):
+def generate_heat_map(_queryset):
     """
     Method to generate a heat map with all the values
-    :param _list_data: List of values for every day
+    :param _queryset: List of values for every day
     """
 
     logging.info('Start to generate the heat map')
@@ -75,81 +80,84 @@ def generate_heat_map(_list_data):
                               height='99%')
         location = []
 
-        for c in range(0, len(_list_data)):
-            for lat, lon in zip(_list_data[c]['Latitude'], _list_data[c]['Longitude']):
-                if math.isnan(lat) or math.isnan(lon):
-                    pass
-                else:
-                    location.append([lat, lon])
+        for row in _queryset:
+            if row['latitude'] is None or row['longitude'] is None or \
+                    math.isnan(row['latitude']) or math.isnan(row['longitude']):
+                pass
+            else:
+                location.append([row['latitude'], row['longitude']])
 
         HeatMap(location, radius=16).add_to(heat_map)
         heat_map.save(f'{PATH_MAP}heatMap.html')
 
-        logging.info('Heat map successfully generated in html')
+        print('Heat map successfully generated in html')
 
     except Exception as err:
-        logging.error(f'\n_list_data: {_list_data[c]}'
-                      f'Line: {err.__traceback__.tb_lineno} \n'
+        logging.error(f'\nRow: {row}'
+                      f'\nLine: {err.__traceback__.tb_lineno} \n'
                       f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
                       f'Type Error: {type(err).__name__} \n'
                       f'Arguments:\n {err.args}')
 
 
-def cron_covid19():
+def get_accumulate_amounts():
     """
-    Method in which start the process and call the rest of the methods for calculating and get
-    the data to save in DB
+    Return the accumulate amounts per day
+    :return: Return a queryset
     """
     try:
-        # Verify if we have to reloading data of several dates or loading only one day
-        reload = True if os.getenv('RELOAD', 'N').upper() == 'Y' else False
+        queryset = DataCovid19Item.objects.values('date').annotate(dead_cases=Sum('dead_cases'),
+                                                                   confirmed_cases=Sum('confirmed_cases'),
+                                                                   recovered_cases=Sum('recovered_cases'),
+                                                                   active_cases=Sum('active_cases'),
+                                                                   ).order_by('date')
+        return queryset
 
-        year = os.getenv('YEAR_FROM', 2020) if reload else date.today().year
-        month = os.getenv('MONTH_FROM', 3) if reload else date.today().month
-        day = os.getenv('DAY_FROM', 2020) if reload else date.today().day - 1
+    except Exception as err:
+        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
+                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
+                      f'Type Error: {type(err).__name__} \n'
+                      f'Arguments:\n {err.args}')
+    finally:
+        print(f'Getting {len(queryset)} rows from the DB with accumulate amounts')
 
-        list_urls = []
-        # If environment var RELOAD is True load all the data from YEAR_FROM and MONTH_FROM
-        if reload:
-            list_urls = create_list_urls(year, month)
-        else:
-            list_urls = create_list_urls_day(year, month, day)
 
-        # Deleting old data from the date before loading
-        delete_data(year, month, day)
+def get_location_coordinates():
+    """
+    Return all the location coordinates
+    :return: Return a queryset
+    """
+    try:
+        queryset = DataCovid19Item.objects.values('latitude', 'longitude')
+        return queryset
 
-        # Transform the urls in a dataframe and after that in a list
-        list_data = load_data_urls(list_urls)
+    except Exception as err:
+        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
+                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
+                      f'Type Error: {type(err).__name__} \n'
+                      f'Arguments:\n {err.args}')
+    finally:
+        print(f'Getting {len(queryset)} rows from the DB with location coordinates')
 
-        # Rename some columns names
-        list_data = check_list(list_data)
 
-        # Get different lists for every kind of data, dead, confirmed cases and recovered cases
-        dead_cases, confirmed_cases, recovered_cases = generate_data_lists(list_data)
+def cron_graph():
+    """
+    Method to generate graphs and heat map from DB data
+    """
+    try:
+        queryset = get_accumulate_amounts()
 
-        # Create the graphs
-        graphs = True
-        if graphs:
-            generate_graph(dead_cases, 'Dead cases', 'red')
-            generate_graph(confirmed_cases, 'Confirmed cases', 'black')
-            generate_graph(recovered_cases, 'Recovered cases', 'blue')
-
-        # Generate summary table
-        resume_data = \
-            {'Dead cases': dead_cases[len(dead_cases) - 1],
-             'Confirmed cases': confirmed_cases[len(confirmed_cases) - 1],
-             'Recovered cases': recovered_cases[len(recovered_cases) - 1],
-             'Mortality tax':
-                 round(dead_cases[len(dead_cases) - 1] / confirmed_cases[len(confirmed_cases) - 1] * 100, 2),
-             'Recovered tax':
-                 round(recovered_cases[len(recovered_cases) - 1] / confirmed_cases[len(confirmed_cases) - 1] * 100, 2)
-             }
-
-        resume_data = pd.DataFrame(data=resume_data, index=[0])
-        logging.info(f'Summary table: \n {resume_data}')
+        # From the queryset get a list with values for each type (dead, recovered, confirmed)
+        generate_graph([queryset[row]['dead_cases'] for row in range(0, len(queryset))],
+                       'Dead cases', 'red')
+        generate_graph([queryset[row]['confirmed_cases'] for row in range(0, len(queryset))],
+                       'Confirmed cases', 'black')
+        generate_graph([queryset[row]['recovered_cases'] for row in range(0, len(queryset))],
+                       'Recovered cases', 'blue')
 
         # Generate heat map
-        generate_heat_map(list_data)
+        queryset = get_location_coordinates()
+        generate_heat_map(queryset)
 
     except Exception as err:
         logging.error(f'\nError at line: {err.__traceback__.tb_lineno} \n'
@@ -158,22 +166,18 @@ def cron_covid19():
                       f'Arguments:\n {err.args}')
 
 
-if __name__ == '__main__':
-    cron_covid19()
-
-"""
 # Create the cron object
-cron_covid19 = BlockingScheduler()
+cron_graphs = BlockingScheduler()
 
 
 # Set up the cron as 'interval' and executing every 8 hours
-# @cron_covid19.scheduled_job('interval', hours=24, start_date='2020-11-01 23:45:00')
-@cron_covid19.scheduled_job('interval', seconds=20)
+@cron_graphs.scheduled_job('interval', hours=24, start_date='2020-11-21 05:15:00')
+# @cron_graphs.scheduled_job('interval', seconds=20)
 def timed_job():
-    print(f'********* START CRON {SETUP_DATA["title"]} *********')
-    cron_covid19()
-    print.info(f'********* END CRON {SETUP_DATA["title"]} *********')
+    """ Method to schedule the cron """
+    print(f'********* START CRON GRAPHS {SETUP_DATA["title"]} *********')
+    cron_graph()
+    print(f'********* END CRON GRAPHS {SETUP_DATA["title"]} *********')
 
 
-cron_covid19.start()
-"""
+cron_graphs.start()
