@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+{% load static %}
+
+<div class="container">
+
+    <div class="col-md-4">
+        <h1>{{country}} Areas</h1>
+    </div>
+
+    <div class="form-group col-md-12">
+        <table class="table table-striped table-center">
+            <thead>
+                <tr>
+                    <th>State</th>
+                    <th>Dead cases</th>
+                    <th>Confirmed cases</th>
+                    <th>Recovered cases</th>
+                    <th>Active cases</th>
+                    <th>Mortality tax</th>
+                    <th>Recovered tax</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for element in detail_country %}
+                    <tr style="font-size:smaller;">
+                        <td> {{ element.state }} </td>
+                        <td> {{ element.dead_cases }} </td>
+                        <td> {{ element.confirmed_cases }} </td>
+                        <td> {{ element.recovered_cases }} </td>
+                        <td> {{ element.active_cases }} </td>
+                        <td> {{ element.mortality_tax }} % </td>
+                        <td> {{ element.recovered_tax }} % </td>
+                    </tr>
+                {% endfor %}
+
+            </tbody>
+        </table>
+        <small>Last update {{max_date}}</small>
+    </div>
+
+</div>
+
+{% endblock content %}

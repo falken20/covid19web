@@ -32,12 +32,19 @@
 
         <div class="collapse navbar-collapse" id="navbar-falken-users">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="/">Data</a>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownData" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Data
+              </a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="/">Global Resume</a>
+                <a class="dropdown-item" href="/global">Global Rank</a>
+                <a class="dropdown-item" href="/detail/spain">Spain Areas</a>
+              </div>
             </li>
 
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownHouse" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownGraphs" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 Graphs
               </a>
               <div class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -48,7 +55,7 @@
             </li>
 
             <li class="nav-item">
-              <a class="nav-link" href="/heatmap" target="_blank">Map</a>
+              <a class="nav-link" href="/heatmap" target="_blank">Heat map</a>
             </li>
 
             <li class="nav-item">
