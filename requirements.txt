@@ -18,3 +18,6 @@ numpy
 matplotlib
 python-dotenv>=0.14.0  # Manage enviroment vars
 folium
+
+# About Tests
+coverage==3.6
