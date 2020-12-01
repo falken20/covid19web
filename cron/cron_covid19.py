@@ -345,9 +345,11 @@ if __name__ == '__main__':
 # Create the cron object
 cron_covid19 = BlockingScheduler()
 
+HOURS_INTERVAL = 24
+START_DATE = '2020-12-02 05:00:00'
 
-# Set up the cron as 'interval' and executing every 8 hours
-@cron_covid19.scheduled_job('interval', hours=24, start_date='2020-12-02 05:00:00')
+# Set up the cron as 'interval' and executing every 24 hours
+@cron_covid19.scheduled_job('interval', hours=HOURS_INTERVAL, start_date=START_DATE)
 # @cron_covid19.scheduled_job('interval', seconds=20)
 def timed_job():
     # Method to schedule the cron 
