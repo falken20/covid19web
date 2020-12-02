@@ -304,7 +304,9 @@ def cron_covid19():
         list_urls = create_list_urls(year, month, day)
 
         # Deleting old data from the date before loading
-        delete_data(year, month, day)
+        # delete_data(year, month, day)
+        # Cause restrictions in Heroku always removing all the rows in the DB
+        delete_data('2020', '01', '01')
 
         # Transform the urls in a dataframe and after that in a list
         list_data = load_data_urls(list_urls)
@@ -336,11 +338,11 @@ def cron_covid19():
                       f'Type Error: {type(err).__name__} \n'
                       f'Arguments:\n {err.args}')
 
-
 """
 if __name__ == '__main__':
     cron_covid19()
 """
+
 
 # Create the cron object
 cron_covid19 = BlockingScheduler()
