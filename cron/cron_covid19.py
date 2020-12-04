@@ -20,7 +20,6 @@ from dateutil.parser import parse
 # https://docs.djangoproject.com/en/3.1/topics/settings/#custom-default-settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'covid19web.settings')
 import django
-
 django.setup()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -98,6 +97,8 @@ def save_data(df):
             item.case_fatality_ratio = row[COL_CASE_FATALITY_RATIO] if 'Case-Facility_Ratio' in name_cols else 0
 
             item.save()
+        
+        return item.date
 
     except Exception as err:
         logging.error(f'\nIndex={index} \n'
@@ -248,12 +249,12 @@ def load_data_urls(_list_urls):
             np.array(df_data)
             _list_data.append(df_data)
 
-            save_data(df_data)
+            date_saved = save_data(df_data)
 
             lines_count_df += len(df_data)
             urls_count += 1
             print(f'Processing URLs: {urls_count}/{len(_list_urls)}'
-                  f', Total rows saved in DB: {lines_count_df}')
+                  f', Date: {date_saved} Total rows saved in DB: {lines_count_df}')
 
     except Exception as err:
         logging.error(f'\nVars: url={url} \n'
@@ -339,11 +340,12 @@ def cron_covid19():
                       f'Arguments:\n {err.args}')
 
 
+"""
 if __name__ == '__main__':
     cron_covid19()
-
-
 """
+
+
 # Create the cron object
 cron_covid19 = BlockingScheduler()
 
@@ -361,4 +363,3 @@ def timed_job():
 
 
 cron_covid19.start()
-"""
