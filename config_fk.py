@@ -26,3 +26,24 @@ SETUP_DATA = {
     'copyrigth': __copyright__,
     'features': __features__,
 }
+
+# .env file
+"""
+SECRET_KEY=
+ENV_PRO=N
+LOG_LEVEL=INFO
+ID_LOG=ROD->
+SQLITE=N
+ALLOWED_HOSTS=
+
+URL_CSV_FILES=https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports
+# If RELOAD is Y delete and load new data from DAY_FROM/MONTH_FROM/YEAR_FROM (not included)
+# If RELOAD is N the cron only load the current day data
+RELOAD=N
+DAY_FROM=20
+MONTH_FROM=11
+YEAR_FROM=2020
+
+# Heroku
+DJANGO_SETTINGS_MODULE=covid19web.settings
+"""
