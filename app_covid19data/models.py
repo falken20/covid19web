@@ -40,7 +40,7 @@ class DataCovid19Item(models.Model):
                 type = field.get_internal_type()
                 if type in ['FloatField', 'IntegerField']:
                     value = getattr(self, field.name)
-                    if math.isnan(value) or value == 'nan':
+                    if value is None or math.isnan(value) or value == 'nan':
                         setattr(self, field.name, None)
 
             super(DataCovid19Item, self).save()

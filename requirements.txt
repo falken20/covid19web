@@ -1,11 +1,11 @@
 # Abount Django project
 requests>=2.22.0
-django==3.1
-lxml==4.5.2
-APScheduler==3.0.0
+django>=3.1
+lxml>=4.5.2
+APScheduler>=3.0.0
 
 # About PostgreSQL
-psycopg2==2.8.5
+psycopg2==2.8.4
 
 # About Heroku
 gunicorn>=20.0.4
@@ -20,4 +20,4 @@ python-dotenv>=0.14.0  # Manage enviroment vars
 folium
 
 # About Tests
-coverage==3.6
+coverage>=3.6
