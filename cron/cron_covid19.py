@@ -59,7 +59,8 @@ def delete_data(_year_from, _month_from, _day_from=1):
     :param _month_from: Month from to delete
     """
     try:
-        print(f'{Fore.GREEN}Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
+        print(
+            f'{Fore.GREEN}Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
         date_from = date(int(_year_from), int(_month_from), int(_day_from))
 
         # Delete return the number of rows deleted and by object type
@@ -349,10 +350,12 @@ if __name__ == '__main__':
 """
 
 # Create the cron object
-cron_covid19 = BlockingScheduler()
+cron_covid19 = BlockingScheduler(timezone='Europe/Madrid')
 
 HOURS_INTERVAL = 24
 START_DATE = '2020-12-02 05:00:00'
+
+
 # @cron_covid19.scheduled_job('interval', hours=HOURS_INTERVAL, start_date=START_DATE)
 @cron_covid19.scheduled_job('cron', hour=5)
 def timed_job():
@@ -363,4 +366,3 @@ def timed_job():
 
 
 cron_covid19.start()
-
