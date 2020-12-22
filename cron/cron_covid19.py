@@ -14,12 +14,14 @@ import numpy as np
 from dotenv import load_dotenv, find_dotenv
 from datetime import date
 from dateutil.parser import parse
+from colorama import Fore, Back
 
 # If you’re using components of Django “standalone” – for example, writing a Python script which
 # loads some Django components
 # https://docs.djangoproject.com/en/3.1/topics/settings/#custom-default-settings
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'covid19web.settings')
 import django
+
 django.setup()
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -57,7 +59,7 @@ def delete_data(_year_from, _month_from, _day_from=1):
     :param _month_from: Month from to delete
     """
     try:
-        print(f'Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
+        print(f'{Fore.GREEN}Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
         date_from = date(int(_year_from), int(_month_from), int(_day_from))
 
         # Delete return the number of rows deleted and by object type
@@ -70,7 +72,7 @@ def delete_data(_year_from, _month_from, _day_from=1):
                       f'Arguments:\n {err.args}')
         raise
     else:
-        print(f'Successfully delete {number_delete[0]} rows in the DB')
+        print(f'{Fore.GREEN}Successfully delete {number_delete[0]} rows in the DB')
 
 
 def save_data(df):
@@ -97,7 +99,7 @@ def save_data(df):
             item.case_fatality_ratio = row[COL_CASE_FATALITY_RATIO] if 'Case-Facility_Ratio' in name_cols else 0
 
             item.save()
-        
+
         return item.date
 
     except Exception as err:
@@ -165,7 +167,7 @@ def create_list_urls(_year_from=2020, _month_from=3, _day_from=1):
                     # Load links for every day in all the months of the year except the current month and _from_month
                     load_days(1, 32, month)
 
-        print(f'Number of urls of data files: {len(_list_urls)}')
+        print(f'{Fore.GREEN}Number of urls of data files: {len(_list_urls)}')
 
     except Exception as err:
         logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
@@ -253,7 +255,7 @@ def load_data_urls(_list_urls):
 
             lines_count_df += len(df_data)
             urls_count += 1
-            print(f'Processing URLs: {urls_count}/{len(_list_urls)}'
+            print(f'{Fore.GREEN}Processing URLs: {urls_count}/{len(_list_urls)}'
                   f', Date: {date_saved} Total rows saved in DB: {lines_count_df}')
 
     except Exception as err:
@@ -331,7 +333,7 @@ def cron_covid19():
 
         resume_data = pd.DataFrame(data=resume_data, index=[0])
 
-        print(f'Summary table: \n {resume_data}')
+        print(f'{Fore.GREEN}Summary table: \n {resume_data}')
 
     except Exception as err:
         logging.error(f'\nError at line: {err.__traceback__.tb_lineno} \n'
@@ -342,24 +344,23 @@ def cron_covid19():
 
 """
 if __name__ == '__main__':
+    print(f'{Fore.CYAN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
     cron_covid19()
 """
-
 
 # Create the cron object
 cron_covid19 = BlockingScheduler()
 
 HOURS_INTERVAL = 24
 START_DATE = '2020-12-02 05:00:00'
-
-# Set up the cron as 'interval' and executing every 24 hours
-@cron_covid19.scheduled_job('interval', hours=HOURS_INTERVAL, start_date=START_DATE)
-# @cron_covid19.scheduled_job('interval', seconds=20)
+# @cron_covid19.scheduled_job('interval', hours=HOURS_INTERVAL, start_date=START_DATE)
+@cron_covid19.scheduled_job('cron', hour=5)
 def timed_job():
     # Method to schedule the cron 
-    print(f'********* START CRON COVID19 {SETUP_DATA["title"]} *********')
+    print(f'{Fore.GREEN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
     cron_covid19()
-    print(f'********* END CRON COVID19 {SETUP_DATA["title"]} *********')
+    print(f'{Fore.GREEN}********* END CRON COVID19 {SETUP_DATA["title"]} *********')
 
 
 cron_covid19.start()
+

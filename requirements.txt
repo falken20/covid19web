@@ -21,3 +21,5 @@ folium
 
 # About Tests
 coverage>=3.6
+
+colorama # Colors in console
