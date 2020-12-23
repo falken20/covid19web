@@ -350,7 +350,7 @@ if __name__ == '__main__':
 """
 
 # Create the cron object
-cron_covid19 = BlockingScheduler(timezone='Europe/Madrid')
+cron_covid19 = BlockingScheduler()
 
 HOURS_INTERVAL = 24
 START_DATE = '2020-12-02 05:00:00'
