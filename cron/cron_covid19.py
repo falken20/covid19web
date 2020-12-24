@@ -9,6 +9,7 @@ import os
 import sys
 from urllib.error import HTTPError
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv, find_dotenv
@@ -292,7 +293,7 @@ def generate_data_lists(_list_data):
     return _list_dead_cases, _list_confirmed_cases, _list_recovered_cases
 
 
-def cron_covid19():
+def covid19():
     """
     Method in which start the process and call the rest of the methods for calculating and get
     the data to save in DB
@@ -346,12 +347,19 @@ def cron_covid19():
 """
 if __name__ == '__main__':
     print(f'{Fore.CYAN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
-    cron_covid19()
+    covid19()
 """
 
-# Create the cron object
+# Schedule the cron
+print(f'{Fore.GREEN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
 cron_covid19 = BlockingScheduler()
+cron_covid19.add_job(covid19, 'cron', hour='5')
+cron_covid19.start()
 
+
+"""
+# Schedule the cron using decorator scheduled_job()
+cron_covid19 = BlockingScheduler()
 HOURS_INTERVAL = 24
 START_DATE = '2020-12-02 05:00:00'
 
@@ -366,3 +374,4 @@ def timed_job():
 
 
 cron_covid19.start()
+"""
