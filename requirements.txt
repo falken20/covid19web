@@ -21,5 +21,7 @@ folium
 
 # About Tests
 coverage>=3.6
+model_mommy
+model-bakery
 
 colorama # Colors in console

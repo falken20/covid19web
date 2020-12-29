@@ -13,12 +13,12 @@ class DataCovid19Item(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     # About data incomes
-    confirmed_cases = models.IntegerField(null=True, blank=True)
-    dead_cases = models.IntegerField(null=True, blank=True)
-    recovered_cases = models.IntegerField(null=True, blank=True)
-    active_cases = models.IntegerField(null=True, blank=True)
-    incidence_rate = models.FloatField(null=True, blank=True)
-    case_fatality_ratio = models.FloatField(null=True, blank=True)
+    confirmed_cases = models.IntegerField(null=True, blank=True, default=0)
+    dead_cases = models.IntegerField(null=True, blank=True, default=0)
+    recovered_cases = models.IntegerField(null=True, blank=True, default=0)
+    active_cases = models.IntegerField(null=True, blank=True, default=0)
+    incidence_rate = models.FloatField(null=True, blank=True, default=0)
+    case_fatality_ratio = models.FloatField(null=True, blank=True, default=0)
     # About update date
     update_date = models.DateTimeField(default=now)
 
