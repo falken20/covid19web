@@ -353,7 +353,8 @@ if __name__ == '__main__':
 # Schedule the cron
 print(f'{Fore.GREEN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
 cron_covid19 = BlockingScheduler()
-cron_covid19.add_job(covid19, 'cron', hour='5')  # For testing in local set minute='*'
+# cron_covid19.add_job(covid19, 'cron', hour='5')
+cron_covid19.add_job(covid19, 'cron', minute='*')  # For testing in local set minute='*'
 cron_covid19.start()
 
 
