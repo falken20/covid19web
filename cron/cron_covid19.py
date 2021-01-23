@@ -54,18 +54,18 @@ logging.basicConfig(level=os.getenv('LOG_LEVEL', 'ERROR'))
 
 def delete_data(_year_from, _month_from, _day_from=1):
     """
-    Delete all the data in the DB from date indicate in the params year, month and day
+    Delete all the data in the DB with date before the date indicate in the params year, month and day
     :param _day_from: Day from to delete
     :param _year_from: Year from to delete
     :param _month_from: Month from to delete
     """
     try:
         print(
-            f'{Fore.GREEN}Deleting rows in the DB with date field greater than {_year_from}/{_month_from}/{_day_from}')
+            f'{Fore.GREEN}Deleting rows in the DB with date field less than {_year_from}/{_month_from}/{_day_from}')
         date_from = date(int(_year_from), int(_month_from), int(_day_from))
 
         # Delete return the number of rows deleted and by object type
-        number_delete = DataCovid19Item.objects.filter(date__gt=date_from).delete()
+        number_delete = DataCovid19Item.objects.filter(update_date__lt=date_from).delete()
 
     except Exception as err:
         logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
@@ -308,11 +308,6 @@ def covid19():
 
         list_urls = create_list_urls(year, month, day)
 
-        # Deleting old data from the date before loading
-        # delete_data(year, month, day)
-        # Cause restrictions in Heroku always removing all the rows in the DB
-        delete_data('2020', '01', '01')
-
         # Transform the urls in a dataframe and after that in a list
         list_data = load_data_urls(list_urls)
 
@@ -337,6 +332,9 @@ def covid19():
 
         print(f'{Fore.GREEN}Summary table: \n {resume_data}')
 
+        # Deleting data from the date before loading date
+        delete_data(year, month, day)
+
     except Exception as err:
         logging.error(f'\nError at line: {err.__traceback__.tb_lineno} \n'
                       f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
@@ -344,17 +342,15 @@ def covid19():
                       f'Arguments:\n {err.args}')
 
 
-"""
-if __name__ == '__main__':
-    print(f'{Fore.CYAN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
-    covid19()
-"""
-
 # Schedule the cron
 print(f'{Fore.GREEN}********* START CRON COVID19 {SETUP_DATA["title"]} *********')
 cron_covid19 = BlockingScheduler()
-cron_covid19.add_job(covid19, 'cron', hour='12')
-# cron_covid19.add_job(covid19, 'cron', minute='*')  # For testing in local set minute='*'
+if os.getenv('ENV_PRO', 'Y') == 'Y':
+    print('Running in PRODUCTION environment')
+    cron_covid19.add_job(covid19, 'cron', hour='12')
+else:
+    print('Running in LOCAL environment')
+    cron_covid19.add_job(covid19, 'cron', minute='*')  # For testing in local set minute='*'
 cron_covid19.start()
 
 
