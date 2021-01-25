@@ -166,6 +166,18 @@ def cron_graph():
                       f'Arguments:\n {err.args}')
 
 
+# Schedule the cron
+print(f'{Fore.GREEN}********* START CRON Graphs Covid - {SETUP_DATA["title"]} *********')
+cron_covid19_graphs = BlockingScheduler()
+if os.getenv('ENV_PRO', 'Y') == 'Y':
+    print('Running in PRODUCTION environment')
+    cron_covid19_graphs.add_job(cron_graph, 'cron', hour='13')
+else:
+    print('Running in LOCAL environment')
+    cron_covid19_graphs.add_job(cron_graph, 'cron', minute='*')  # For testing in local set minute='*'
+cron_covid19_graphs.start()
+
+"""
 # Create the cron object
 cron_graphs = BlockingScheduler()
 
@@ -174,10 +186,10 @@ cron_graphs = BlockingScheduler()
 @cron_graphs.scheduled_job('interval', hours=24, start_date='2020-11-21 05:15:00')
 # @cron_graphs.scheduled_job('interval', seconds=20)
 def timed_job():
-    """ Method to schedule the cron """
     print(f'********* START CRON GRAPHS {SETUP_DATA["title"]} *********')
     cron_graph()
     print(f'********* END CRON GRAPHS {SETUP_DATA["title"]} *********')
 
 
 cron_graphs.start()
+"""
