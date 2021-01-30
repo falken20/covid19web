@@ -1,6 +1,12 @@
 # Falken
 temp/
 #*.sqlite3
+# Graphs generate in local
+static/covid19web/img/graph_black.png
+static/covid19web/img/graph_blue.png
+static/covid19web/img/graph_red.png
+templates/covid19data/heatMap.html
+
 
 # IDE folders
 # Mac

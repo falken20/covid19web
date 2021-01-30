@@ -14,6 +14,7 @@ from matplotlib import pyplot as plt
 import folium
 import math
 from folium.plugins import HeatMap
+from colorama import Fore
 
 # If you’re using components of Django “standalone” – for example, writing a Python script which
 # loads some Django components
@@ -28,8 +29,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from config_fk import SETUP_DATA
 from app_covid19data.models import DataCovid19Item
 
-PATH_MAP = '../templates/covid19data/'
-PATH_GRAPH = '../static/covid19web/img/'
+PATH_MAP = 'templates/covid19data/'
+PATH_GRAPH = 'static/covid19web/img/'
 
 # Load env file
 load_dotenv(find_dotenv())
@@ -46,22 +47,30 @@ def generate_graph(_list_data, _label='Graph', _color='Pink'):
     :param _list_data: List of data to show
     """
 
-    logging.info(f'Start to generate the graph of {_label}')
+    try:
+        logging.info(f'Start to generate the graph of {_label}')
 
-    # Generate the graph
-    x = [i for i in range(0, len(_list_data))]
-    plt.style.use('seaborn-talk')
-    plt.plot(x, _list_data, color=_color, label=_label, linewidth=1.0)
-    plt.xlabel('Days')
-    plt.ylabel('People number')
-    plt.title(f'COVID-19 Evolution')
-    plt.grid(True)
-    plt.legend(loc='upper left')
-    plt.savefig(f'{PATH_GRAPH}graph_{_color}.png')
-    # plt.show()
-    plt.close()
+        # Generate the graph
+        x = [i for i in range(0, len(_list_data))]
+        plt.style.use('seaborn-talk')
+        plt.plot(x, _list_data, color=_color, label=_label, linewidth=1.0)
+        plt.xlabel('Days')
+        plt.ylabel('People number')
+        plt.title(f'COVID-19 Evolution')
+        plt.grid(True)
+        plt.legend(loc='upper left')
+        plt.savefig(f'{PATH_GRAPH}graph_{_color}.png')
+        # plt.show()
+        plt.close()
 
-    print(f'Graph of {_label} generates successfully')
+        print(f'Graph of {_label} generates successfully')
+    except Exception as err:
+        logging.error(f'\nLine: {err.__traceback__.tb_lineno} \n'
+                      f'File: {err.__traceback__.tb_frame.f_code.co_filename} \n'
+                      f'Type Error: {type(err).__name__} \n'
+                      f'Arguments:\n {err.args} \n'
+                      f'Error:\n {format(err)}')
+        raise
 
 
 def generate_heat_map(_queryset):
