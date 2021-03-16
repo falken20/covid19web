@@ -27,3 +27,8 @@ class Covid19dataTest(TestCase):
         # The data for the test are loading in above setUp function
         queryset = views.get_resume_country('Spain')
         self.assertEqual(queryset['country'], 'Spain')
+
+    def test_covid19data_get_detail_country(self):
+        queryset = views.get_detail_country('Spain')
+        print(queryset) 
+        self.assertGreaterEqual(len(queryset), 1)
